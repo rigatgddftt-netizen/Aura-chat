@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aura Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #05050a; color: #fff; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        /* ── লগইন স্ক্রিন ── */
+        #login-screen { width: 100%; max-width: 400px; padding: 30px; text-align: center; }
+        #login-screen h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; color: #22d3ee; cursor: pointer; }
+        #login-screen p { color: #a1a1aa; margin-bottom: 30px; font-size: 14px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 13px; color: #a1a1aa; }
+        .input-group input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; background: #111; color: #fff; font-size: 16px; outline: none; }
+        .input-group input:focus { border-color: #22d3ee; }
+        .login-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #22d3ee, #3b82f6); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* ── মেইন অ্যাপ ── */
+        #app-screen { display: none; width: 100%; max-width: 400px; height: 100vh; background: #09090b; flex-direction: column; position: relative; }
+        .header { padding: 15px 20px; background: #12121a; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .header-info { cursor: pointer; }
+        .header-info h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .header-info p { font-size: 12px; color: #22d3ee; }
+        .logout-btn { background: transparent; border: none; color: #ff4444; font-size: 20px; cursor: pointer; }
+
+        /* ── কন্টাক্ট লিস্ট ── */
+        #contact-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .contact-item { display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 16px; background: #12121a; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .contact-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee, #3b82f6); display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 20px; overflow: hidden; background-size: cover; background-position: center; }
+        .contact-info h4 { font-size: 16px; margin-bottom: 3px; }
+        .contact-info p { font-size: 12px; color: #a1a1aa; }
+
+        /* ── প্রোফাইল ── */
+        #profile-screen { display: none; flex: 1; flex-direction: column; padding: 20px; position: absolute; inset: 0; background: #09090b; z-index: 50; overflow-y: auto; }
+        .profile-top { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        .prof-pic { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee, #3b82f6); display: flex; justify-content: center; align-items: center; font-size: 40px; color: #fff; font-weight: bold; position: relative; cursor: pointer; margin-bottom: 15px; overflow: hidden; background-size: cover; background-position: center; }
+        .edit-badge { position: absolute; bottom: 0; right: 0; background: #fff; color: #000; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid #09090b; font-size: 16px; }
+        .profile-top h2 { font-size: 24px; margin-bottom: 5px; }
+        .profile-top p { color: #a1a1aa; font-size: 14px; }
+        .set-btn { width: 100%; padding: 16px; border-radius: 12px; background: #12121a; border: 1px solid #27272a; color: #fff; font-size: 15px; text-align: left; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+        .set-btn i { font-size: 20px; color: #22d3ee; }
+        .set-btn.logout { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1); }
+        .set-btn.logout i { color: #ef4444; }
+        .back-btn-full { width: 100%; padding: 16px; border-radius: 12px; background: linear-gradient(135deg, #22d3ee, #3b82f6); color: #fff; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; border: none; }
+
+        /* ── চ্যাট ভিউ ── */
+        #chat-view { display: none; flex: 1; flex-direction: column; height: 100%; position: absolute; inset: 0; background: #09090b; z-index: 100; }
+        .chat-header { padding: 15px 20px; background: #12121a; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .back-btn { background: transparent; border: none; color: #22d3ee; font-size: 24px; cursor: pointer; z-index: 10; }
+        .chat-header-info { cursor: pointer; }
+        .chat-header-info h2 { font-size: 16px; font-weight: 600; }
+        .chat-header-info p { font-size: 12px; color: #22c55e; }
+        .call-btn { margin-left: auto; background: rgba(34,211,238,0.1); color: #22d3ee; border: 1px solid #22d3ee; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; word-wrap: break-word; }
+        .message.sent { background: linear-gradient(135deg, #22d3ee, #3b82f6); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .message.received { background: #1c1c26; color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg-time { font-size: 10px; text-align: right; margin-top: 4px; opacity: 0.7; }
+
+        .msg-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; display: block; }
+        .voice-msg { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
+        .voice-msg audio { width: 200px; height: 35px; outline: none; }
+
+        .input-area { padding: 15px; background: #12121a; display: flex; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+        .icon-btn { background: transparent; border: none; color: #a1a1aa; font-size: 24px; cursor: pointer; padding: 0 5px; }
+        .icon-btn:hover { color: #22d3ee; }
+        .input-area input[type="text"] { flex: 1; padding: 15px; border-radius: 30px; border: 1px solid #27272a; background: #09090b; color: #fff; font-size: 15px; outline: none; }
+        .send-btn { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee, #3b82f6); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        
+        .recording { color: #ef4444 !important; animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        #file-upload, #profile-upload { display: none; }
+
+        /* ── ব্লক/ডিলিট মোডাল ── */
+        #action-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .action-box { background: #1a1a1a; padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; }
+        .action-box h3 { margin-bottom: 20px; font-size: 18px; }
+        .action-box button { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-block { background: #ef4444; color: #fff; }
+        .btn-delete { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .btn-cancel { background: #333; color: #fff; }
+
+        /* ── কলিং স্ক্রিন ── */
+        #call-screen { position: fixed; inset: 0; background: rgba(20, 20, 25, 0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 999; display: none; flex-direction: column; justify-content: space-between; padding: 50px 20px; }
+        .call-header { text-align: center; }
+        .call-avatar-large { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee, #3b82f6); display: flex; justify-content: center; align-items: center; font-size: 50px; color: #fff; margin: 0 auto 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; background-size: cover; background-position: center; }
+        .call-screen h2 { font-size: 28px; margin-bottom: 5px; }
+        .call-screen p { color: #a1a1aa; font-size: 16px; }
+        
+        .call-controls { display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 350px; margin: 0 auto; }
+        .ctrl-btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 26px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+        .ctrl-btn.active { background: #fff; color: #000; }
+        .ctrl-label { font-size: 11px; color: #a1a1aa; margin-top: 8px; }
+        .end-call-btn { width: 70px; height: 70px; border-radius: 50%; background: #ef4444; border: none; color: #fff; font-size: 30px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(239,68,68,0.4); }
+
+        /* ── ইনকামিং কল পপআপ ── */
+        #incoming-call-screen { position: fixed; inset: 0; background: #0a0a0a; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .incoming-avatar { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee, #3b82f6); display: flex; justify-content: center; align-items: center; font-size: 50px; color: #fff; margin-bottom: 20px; }
+        .incoming-actions { display: flex; gap: 50px; margin-top: 50px; }
+        .incoming-btn { width: 70px; height: 70px; border-radius: 50%; border: none; color: #fff; font-size: 30px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .accept-btn { background: #22c55e; animation: pulse-green 1.5s infinite; }
+        .decline-btn { background: #ef4444; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); } 70% { box-shadow: 0 0 0 20px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+    </style>
+</head>
+<body>
+
+    <!-- লগইন স্ক্রিন -->
+    <div id="login-screen">
+        <h1 id="secret-delete">Aura Chat</h1>
+        <p>Enter your name and phone number to start</p>
+        <div class="input-group">
+            <label>Your Name</label>
+            <input type="text" id="user-name" placeholder="e.g. Rifat">
+        </div>
+        <div class="input-group">
+            <label>Phone Number</label>
+            <input type="tel" id="user-phone" placeholder="e.g. 01711223344">
+        </div>
+        <button class="login-btn" onclick="loginUser()">Login / Sign Up</button>
+    </div>
+
+    <!-- মেইন অ্যাপ -->
+    <div id="app-screen">
+        <div class="header">
+            <div class="header-info" onclick="openProfile()">
+                <h2 id="my-name-display">User <i class="ti ti-chevron-down" style="font-size:14px; color:#a1a1aa;"></i></h2>
+                <p>Tap for profile</p>
+            </div>
+            <button class="logout-btn" onclick="logoutUser()"><i class="ti ti-logout"></i></button>
+        </div>
+        <div id="contact-list"></div>
+    </div>
+
+    <!-- প্রোফাইল -->
+    <div id="profile-screen">
+        <div class="profile-top">
+            <div class="prof-pic" id="my-pic" onclick="document.getElementById('profile-upload').click()">U <div class="edit-badge"><i class="ti ti-camera"></i></div></div>
+            <input type="file" id="profile-upload" accept="image/*" onchange="uploadProfilePic(event)">
+            <h2 id="prof-name">User Name</h2>
+            <p id="prof-phone">+880...</p>
+        </div>
+        <button class="set-btn" onclick="editName()"><i class="ti ti-user-edit"></i> Edit Name</button>
+        <button class="set-btn logout" onclick="logoutUser()"><i class="ti ti-logout"></i> Logout</button>
+        <button class="back-btn-full" onclick="closeProfile()">Back to Chats</button>
+    </div>
+
+    <!-- চ্যাট ভিউ -->
+    <div id="chat-view">
+        <div class="chat-header">
+            <button class="back-btn" onclick="closeChat()"><i class="ti ti-arrow-left"></i></button>
+            <div class="chat-header-info" onclick="openActionModal()">
+                <h2 id="chat-with-name">Name</h2>
+                <p>Tap for options</p>
+            </div>
+            <div class="chat-header-icons">
+                <button class="call-btn" onclick="startCall()"><i class="ti ti-phone"></i> Call</button>
+            </div>
+        </div>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-area">
+            <button class="icon-btn" onclick="document.getElementById('file-upload').click()"><i class="ti ti-paperclip"></i></button>
+            <input type="file" id="file-upload" accept="image/*,.apk,.html" onchange="sendFile(event)">
+            <input type="text" id="message-input" placeholder="Message..." onkeypress="handleKeyPress(event)">
+            <button class="icon-btn" id="mic-btn" onclick="toggleRecording()"><i class="ti ti-microphone"></i></button>
+            <button class="send-btn" onclick="sendMessage()"><i class="ti ti-send"></i></button>
+        </div>
+    </div>
+
+    <!-- কন্টাক্ট অ্যাকশন মোডাল -->
+    <div id="action-modal">
+        <div class="action-box">
+            <h3 id="action-modal-title">Contact Options</h3>
+            <button class="btn-block" onclick="blockContact()"><i class="ti ti-ban"></i> Block Contact</button>
+            <button class="btn-delete" onclick="deleteContact()"><i class="ti ti-trash"></i> Delete Contact</button>
+            <button class="btn-cancel" onclick="closeActionModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- আউটগোয়িং কল স্ক্রিন -->
+    <div id="call-screen">
+        <div class="call-header">
+            <div class="call-avatar-large" id="call-avatar">U</div>
+            <h2 id="call-name">Calling...</h2>
+            <p id="call-status">Ringing...</p>
+        </div>
+        <div class="call-controls">
+            <div style="text-align: center;">
+                <button class="ctrl-btn active" id="mic-toggle" onclick="toggleCallMic()"><i class="ti ti-microphone"></i></button>
+                <div class="ctrl-label" id="mic-label">Mic On</div>
+            </div>
+            <div style="text-align: center;">
+                <button class="ctrl-btn" onclick="toggleEarpiece()"><i class="ti ti-volume"></i></button>
+                <div class="ctrl-label">Earpiece</div>
+            </div>
+            <div style="text-align: center;">
+                <button class="end-call-btn" onclick="endCall()"><i class="ti ti-phone-off"></i></button>
+                <div class="ctrl-label" style="margin-top: 8px;">Hang Up</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ইনকামিং কল স্ক্রিন -->
+    <div id="incoming-call-screen">
+        <div class="incoming-avatar" id="incoming-avatar">U</div>
+        <h2 id="incoming-name">Name</h2>
+        <p style="color: #a1a1aa; margin-top: 5px;">Incoming Voice Call...</p>
+        <div class="incoming-actions">
+            <button class="incoming-btn decline-btn" onclick="declineCall()"><i class="ti ti-phone-off"></i></button>
+            <button class="incoming-btn accept-btn" onclick="acceptCall()"><i class="ti ti-phone"></i></button>
+        </div>
+    </div>
+
+    <!-- Firebase ও WebRTC লজিক -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, onChildAdded, remove, off, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQNRnTXIAl1vPrs4xpjvCxF_75ta5S5GA",
+            authDomain: "rifat-live-chat-apps.firebaseapp.com",
+            databaseURL: "https://rifat-live-chat-apps-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "rifat-live-chat-apps",
+            storageBucket: "rifat-live-chat-apps.firebasestorage.app",
+            messagingSenderId: "195645035093",
+            appId: "1:195645035093:web:378f7d3c8559cdd06b7adc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let currentChatWith = null;
+        let messageListener = null;
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let myBlockedList = [];
+        let callTimer;
+
+        // ── WebRTC ভেরিয়েবল ──
+        let peerConnection = null;
+        let localStream = null;
+        let remoteStream = null;
+        let currentCallId = null;
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // ── গোপন ডেটা ডিলিট বাটন (লোগোতে ৩ বার ক্লিক) ──
+        let clickCount = 0;
+        document.getElementById('secret-delete').addEventListener('click', function() {
+            clickCount++;
+            if (clickCount === 3) {
+                if(confirm("⚠️ Are you sure you want to delete ALL data (accounts & messages)?")) {
+                    remove(ref(db, 'users')).then(() => {
+                        remove(ref(db, 'messages')).then(() => {
+                            remove(ref(db, 'blocked')).then(() => {
+                                alert("✅ All data deleted! App is now fresh.");
+                                localStorage.removeItem('chat_user');
+                                location.reload();
+                            });
+                        });
+                    });
+                }
+                clickCount = 0;
+            }
+            setTimeout(() => { clickCount = 0; }, 1000);
+        });
+
+        // ── লগইন ──
+        window.loginUser = async function() {
+            const name = document.getElementById('user-name').value.trim();
+            const phone = document.getElementById('user-phone').value.trim();
+            if (!name || !phone || phone.length < 11) { alert("Enter valid name and 11-digit phone!"); return; }
+
+            await set(ref(db, 'users/' + phone), { name: name, phone: phone, createdAt: Date.now() });
+            localStorage.setItem('chat_user', JSON.stringify({ name, phone }));
+            initApp();
+        }
+
+        window.logoutUser = function() {
+            localStorage.removeItem('chat_user');
+            location.reload();
+        }
+
+        function initApp() {
+            const saved = localStorage.getItem('chat_user');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
+                document.getElementById('my-name-display').innerHTML = currentUser.name + ' <i class="ti ti-chevron-down" style="font-size:14px; color:#a1a1aa;"></i>';
+                
+                get(ref(db, 'blocked/' + currentUser.phone)).then((snapshot) => {
+                    if(snapshot.exists()) { myBlockedList = snapshot.val(); }
+                    loadContacts();
+                    listenForIncomingCalls();
+                });
+            } else {
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('app-screen').style.display = 'none';
+            }
+        }
+
+        // ── কন্টাক্ট লোড ──
+        function loadContacts() {
+            const contactList = document.getElementById('contact-list');
+            contactList.innerHTML = '<p style="color:#a1a1aa; text-align:center; padding:20px;">Loading...</p>';
+            
+            onValue(ref(db, 'users'), (snapshot) => {
+                contactList.innerHTML = '';
+                const users = snapshot.val();
+                let hasContacts = false;
+
+                for (let phone in users) {
+                    const user = users[phone];
+                    if (phone !== currentUser.phone && !myBlockedList.includes(phone)) { 
+                        hasContacts = true;
+                        const div = document.createElement('div');
+                        div.className = 'contact-item';
+                        div.onclick = () => openChat(user);
+                        
+                        const savedPic = localStorage.getItem('profile_pic_' + phone);
+                        let avatarStyle = savedPic ? `background-image: url('${savedPic}'); background-size: cover;` : '';
+                        let avatarText = savedPic ? '' : user.name.charAt(0).toUpperCase();
+
+                        div.innerHTML = `
+                            <div class="contact-avatar" style="${avatarStyle}">${avatarText}</div>
+                            <div class="contact-info">
+                                <h4>${user.name}</h4>
+                                <p>Tap to chat</p>
+                            </div>
+                        `;
+                        contactList.appendChild(div);
+                    }
+                }
+                if (!hasContacts) {
+                    contactList.innerHTML = '<p style="color:#a1a1aa; text-align:center; padding:20px;">No contacts found. Invite friends!</p>';
+                }
+            });
+        }
+
+        // ── চ্যাট ওপেন ──
+        window.openChat = function(user) {
+            currentChatWith = user;
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('profile-screen').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'flex';
+            document.getElementById('chat-with-name').innerText = user.name;
+
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+
+            const roomId = [currentUser.phone, currentChatWith.phone].sort().join('_');
+            
+            if (messageListener) off(messageListener);
+
+            messageListener = onChildAdded(ref(db, 'messages/' + roomId), (snapshot) => {
+                const data = snapshot.val();
+                const isMe = data.sender === currentUser.phone;
+                
+                if (!isMe && myBlockedList.includes(data.sender)) return;
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${isMe ? 'sent' : 'received'}`;
+                const time = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                if (data.fileUrl) {
+                    if (data.fileType.startsWith('image/')) {
+                        msgDiv.innerHTML = `<img src="${data.fileUrl}" class="msg-image"><div class="msg-time">${time}</div>`;
+                    } else if (data.fileType.startsWith('audio/')) {
+                        msgDiv.innerHTML = `
+                            <div class="voice-msg">
+                                <i class="ti ti-microphone" style="font-size:20px;"></i>
+                                <audio controls src="${data.fileUrl}"></audio>
+                            </div>
+                            <div class="msg-time">${time}</div>
+                        `;
+                    } else {
+                        msgDiv.innerHTML = `<div class="msg-file"><i class="ti ti-file"></i><div class="msg-file-info"><span>${data.fileName}</span><a href="${data.fileUrl}" download="${data.fileName}">Download</a></div></div><div class="msg-time">${time}</div>`;
+                    }
+                } else {
+                    msgDiv.innerHTML = `<div>${data.text}</div><div class="msg-time">${time}</div>`;
+                }
+                chatBox.appendChild(msgDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        // ── চ্যাট বন্ধ (ব্যাক বাটন) ──
+        window.closeChat = function() {
+            try {
+                if (messageListener) off(messageListener);
+            } catch (e) {
+                console.log("Listener error", e);
+            }
+            currentChatWith = null;
+            document.getElementById('chat-view').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            loadContacts();
+        }
+
+        window.sendMessage = function() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatWith) return;
+
+            const roomId = [currentUser.phone, currentChatWith.phone].sort().join('_');
+            push(ref(db, 'messages/' + roomId), { sender: currentUser.phone, text: text, timestamp: Date.now() });
+            input.value = '';
+        }
+
+        window.handleKeyPress = function(event) { if (event.key === 'Enter') sendMessage(); }
+
+        window.sendFile = function(event) {
+            const file = event.target.files[0];
+            if (!file || !currentChatWith) return;
+            if (file.size > 1024 * 1024) { alert("File too large (Max 1MB)!"); event.target.value = ''; return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const roomId = [currentUser.phone, currentChatWith.phone].sort().join('_');
+                push(ref(db, 'messages/' + roomId), {
+                    sender: currentUser.phone, fileUrl: e.target.result, fileName: file.name, fileType: file.type, timestamp: Date.now()
+                });
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        window.toggleRecording = async function() {
+            const micBtn = document.getElementById('mic-btn');
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const roomId = [currentUser.phone, currentChatWith.phone].sort().join('_');
+                            push(ref(db, 'messages/' + roomId), {
+                                sender: currentUser.phone, fileUrl: e.target.result, fileName: "Voice Message", fileType: "audio/webm", timestamp: Date.now()
+                            });
+                        };
+                        reader.readAsDataURL(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    micBtn.innerHTML = '<i class="ti ti-player-stop"></i>';
+                } catch (err) { 
+                    alert("Microphone permission blocked! Please allow it from browser settings."); 
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = '<i class="ti ti-microphone"></i>';
+            }
+        }
+
+        // ── প্রোফাইল ──
+        window.openProfile = function() {
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('profile-screen').style.display = 'flex';
+            document.getElementById('prof-name').innerText = currentUser.name;
+            document.getElementById('prof-phone').innerText = currentUser.phone;
+            const savedPic = localStorage.getItem('profile_pic_' + currentUser.phone);
+            const picDiv = document.getElementById('my-pic');
+            if(savedPic) {
+                picDiv.style.backgroundImage = `url('${savedPic}')`;
+                picDiv.innerHTML = '<div class="edit-badge"><i class="ti ti-camera"></i></div>';
+            } else {
+                picDiv.style.backgroundImage = 'none';
+                picDiv.innerHTML = currentUser.name.charAt(0).toUpperCase() + '<div class="edit-badge"><i class="ti ti-camera"></i></div>';
+            }
+        }
+
+        window.closeProfile = function() {
+            document.getElementById('profile-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+        }
+
+        window.editName = function() {
+            const newName = prompt("Enter new name:", currentUser.name);
+            if(newName && newName.trim() !== "") {
+                currentUser.name = newName.trim();
+                localStorage.setItem('chat_user', JSON.stringify(currentUser));
+                document.getElementById('prof-name').innerText = currentUser.name;
+                document.getElementById('my-name-display').innerHTML = currentUser.name + ' <i class="ti ti-chevron-down" style="font-size:14px; color:#a1a1aa;"></i>';
+                set(ref(db, 'users/' + currentUser.phone + '/name'), currentUser.name);
+            }
+        }
+
+        window.uploadProfilePic = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Image = e.target.result;
+                localStorage.setItem('profile_pic_' + currentUser.phone, base64Image);
+                const picDiv = document.getElementById('my-pic');
+                picDiv.style.backgroundImage = `url('${base64Image}')`;
+                picDiv.innerHTML = '<div class="edit-badge"><i class="ti ti-camera"></i></div>';
+                alert("Profile picture updated!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ── ব্লক ও ডিলিট ──
+        window.openActionModal = function() {
+            if (!currentChatWith) return;
+            document.getElementById('action-modal').style.display = 'flex';
+        }
+        window.closeActionModal = function() {
+            document.getElementById('action-modal').style.display = 'none';
+        }
+        window.blockContact = function() {
+            if (!currentChatWith) return;
+            if(confirm("Are you sure you want to block " + currentChatWith.name + "?")) {
+                set(ref(db, 'blocked/' + currentUser.phone + '/' + currentChatWith.phone), true).then(() => {
+                    if(!myBlockedList.includes(currentChatWith.phone)) { myBlockedList.push(currentChatWith.phone); }
+                    alert(currentChatWith.name + " has been blocked!");
+                    closeActionModal();
+                    closeChat();
+                });
+            }
+        }
+        window.deleteContact = function() {
+            if (!currentChatWith) return;
+            if(confirm("Are you sure you want to delete " + currentChatWith.name + "?")) {
+                alert(currentChatWith.name + " has been deleted!");
+                closeActionModal();
+                closeChat();
+            }
+        }
+
+        // ── WebRTC কল লজিক ──
+        async function setupPeerConnection() {
+            peerConnection = new RTCPeerConnection(configuration);
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            }
+
+            peerConnection.ontrack = event => {
+                remoteStream = event.streams[0];
+                const audio = new Audio();
+                audio.srcObject = remoteStream;
+                audio.play();
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate && currentCallId) {
+                    push(ref(db, 'calls/' + currentCallId + '/callerCandidates'), event.candidate.toJSON());
+                }
+            };
+        }
+
+        window.startCall = async function() {
+            if (!currentChatWith) return;
+            
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                alert("Microphone permission required for calling!");
+                return;
+            }
+
+            document.getElementById('call-screen').style.display = 'flex';
+            document.getElementById('call-name').innerText = currentChatWith.name;
+            document.getElementById('call-avatar').innerText = currentChatWith.name.charAt(0).toUpperCase();
+            document.getElementById('call-status').innerText = "Calling...";
+
+            currentCallId = [currentUser.phone, currentChatWith.phone].sort().join('_');
+
+            await setupPeerConnection();
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            const callDoc = ref(db, 'calls/' + currentCallId);
+            await set(callDoc, {
+                caller: currentUser.phone,
+                receiver: currentChatWith.phone,
+                offer: { type: offer.type, sdp: offer.sdp },
+                status: 'calling'
+            });
+
+            onValue(ref(db, 'calls/' + currentCallId + '/answer'), (snapshot) => {
+                const data = snapshot.val();
+                if (data && peerConnection && !peerConnection.currentRemoteDescription) {
+                    const answer = new RTCSessionDescription(data);
+                    peerConnection.setRemoteDescription(answer);
+                    document.getElementById('call-status').innerText = "Connected";
+                }
+            });
+
+            onValue(ref(db, 'calls/' + currentCallId + '/receiverCandidates'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.values(data).forEach(candidate => {
+                        if (peerConnection && candidate) {
+                            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                        }
+                    });
+                }
+            });
+
+            onValue(ref(db, 'calls/' + currentCallId + '/status'), (snapshot) => {
+                if (snapshot.val() === 'declined') {
+                    alert("Call declined by receiver.");
+                    endCall();
+                }
+            });
+
+            setTimeout(() => {
+                if (document.getElementById('call-screen').style.display === 'flex' && document.getElementById('call-status').innerText === "Calling...") {
+                    alert("No answer.");
+                    endCall();
+                }
+            }, 30000);
+        }
+
+        // ── ইনকামিং কল শোনা ──
+        function listenForIncomingCalls() {
+            onValue(ref(db, 'calls'), (snapshot) => {
+                const calls = snapshot.val();
+                if (!calls) return;
+
+                for (let callId in calls) {
+                    const call = calls[callId];
+                    if (call.receiver === currentUser.phone && call.status === 'calling') {
+                        currentCallId = callId;
+                        document.getElementById('incoming-call-screen').style.display = 'flex';
+                        document.getElementById('incoming-name').innerText = call.caller;
+                        document.getElementById('incoming-avatar').innerText = call.caller.charAt(0).toUpperCase();
+                    }
+                }
+            });
+        }
+
+        window.acceptCall = async function() {
+            document.getElementById('incoming-call-screen').style.display = 'none';
+            document.getElementById('call-screen').style.display = 'flex';
+            
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                alert("Microphone permission required to accept call!");
+                declineCall();
+                return;
+            }
+
+            await setupPeerConnection();
+
+            const callSnapshot = await get(ref(db, 'calls/' + currentCallId));
+            const callData = callSnapshot.val();
+
+            if (callData) {
+                document.getElementById('call-name').innerText = callData.caller;
+                document.getElementById('call-avatar').innerText = callData.caller.charAt(0).toUpperCase();
+                document.getElementById('call-status').innerText = "Connected";
+
+                const offer = new RTCSessionDescription(callData.offer);
+                await peerConnection.setRemoteDescription(offer);
+
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                await set(ref(db, 'calls/' + currentCallId + '/answer'), { type: answer.type, sdp: answer.sdp });
+                await set(ref(db, 'calls/' + currentCallId + '/status'), 'accepted');
+
+                onValue(ref(db, 'calls/' + currentCallId + '/callerCandidates'), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.values(data).forEach(candidate => {
+                            if (peerConnection && candidate) {
+                                peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                            }
+                        });
+                    }
+                });
+
+                peerConnection.onicecandidate = event => {
+                    if (event.candidate) {
+                        push(ref(db, 'calls/' + currentCallId + '/receiverCandidates'), event.candidate.toJSON());
+                    }
+                };
+            }
+        }
+
+        window.declineCall = function() {
+            if (currentCallId) {
+                set(ref(db, 'calls/' + currentCallId + '/status'), 'declined');
+            }
+            document.getElementById('incoming-call-screen').style.display = 'none';
+            currentCallId = null;
+        }
+
+        window.endCall = function() {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            if (currentCallId) {
+                remove(ref(db, 'calls/' + currentCallId));
+            }
+            document.getElementById('call-screen').style.display = 'none';
+            document.getElementById('call-status').innerText = "Ringing...";
+        }
+
+        window.toggleCallMic = function() {
+            const btn = document.getElementById('mic-toggle');
+            const label = document.getElementById('mic-label');
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                audioTrack.enabled = !audioTrack.enabled;
+                if (audioTrack.enabled) {
+                    btn.classList.add('active');
+                    label.innerText = "Mic On";
+                } else {
+                    btn.classList.remove('active');
+                    label.innerText = "Mic Off";
+                }
+            }
+        }
+
+        window.toggleEarpiece = function() {
+            alert("Speaker / Earpiece toggled!");
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
